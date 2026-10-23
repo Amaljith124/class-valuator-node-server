@@ -184,6 +184,10 @@ function retry(boss, id)
                                 processId: id,
                                 objectKey: payload.object_key,
                                 stage: "full-analysis"
+                            }, {
+                                retryLimit: config.pgBossRetryLimit,
+                                retryDelay: config.pgBossRetryDelaySeconds,
+                                expireInSeconds: config.pgBossExpireSeconds
                             })
                                 .then(function (jobId)
                                 {

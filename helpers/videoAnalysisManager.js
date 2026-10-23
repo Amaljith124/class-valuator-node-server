@@ -167,7 +167,11 @@ function submit(boss, input)
                                 stage: "full-analysis"
                             };
 
-                            boss.send(config.queueName, job)
+                            boss.send(config.queueName, job, {
+                                retryLimit: config.pgBossRetryLimit,
+                                retryDelay: config.pgBossRetryDelaySeconds,
+                                expireInSeconds: config.pgBossExpireSeconds
+                            })
                                 .then(function (jobId)
                                 {
                                     if (jobId)
