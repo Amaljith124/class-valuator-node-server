@@ -222,8 +222,50 @@ function deleteObject(objectKey)
     });
 }
 
+function presignedPutUrl(objectKey, expirySeconds)
+{
+    return new Promise(function (resolve, reject)
+    {
+        validateObjectKey(objectKey)
+            .then(function (validatedKey)
+            {
+                getClient()
+                    .then(function (storageClient)
+                    {
+                        storageClient.presignedPutObject(config.r2BucketName, validatedKey, expirySeconds)
+                            .then(function (url)
+                            {
+                                resolve(url);
+                            })
+                            .catch(function (error)
+                            {
+                                console.error("[r2Storage.presignedPutUrl] create upload URL failed", {
+                                    objectKey: validatedKey,
+                                    error: error
+                                });
+                                reject(error);
+                            });
+                    })
+                    .catch(function (error)
+                    {
+                        console.error("[r2Storage.presignedPutUrl] initialize R2 client failed", error);
+                        reject(error);
+                    });
+            })
+            .catch(function (error)
+            {
+                console.error("[r2Storage.presignedPutUrl] validate R2 object key failed", {
+                    objectKey: objectKey,
+                    error: error
+                });
+                reject(error);
+            });
+    });
+}
+
 module.exports = {
     putObject: putObject,
+    presignedPutUrl: presignedPutUrl,
     objectExists: objectExists,
     getObjectMetadata: getObjectMetadata,
     deleteObject: deleteObject

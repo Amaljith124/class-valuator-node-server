@@ -22,5 +22,6 @@ module.exports = {
     r2Endpoint: process.env.R2_ENDPOINT,
     r2Region: process.env.R2_REGION,
     maxUploadMb: Number(process.env.MAX_UPLOAD_MB),
+    uploadUrlExpirySeconds: Number(process.env.UPLOAD_URL_EXPIRY_SECONDS || 3600),
     uploadDir: process.env.UPLOAD_DIR
 };

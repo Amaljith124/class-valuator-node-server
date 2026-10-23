@@ -37,6 +37,75 @@ router.get("/", function (req, res)
         });
 });
 
+router.post("/upload-url", function (req, res)
+{
+    const body = req.body || {};
+
+    uploadManager.createUpload(body.file_name, body.mime_type, body.file_size)
+        .then(function (data)
+        {
+            response.successWithData(res, data);
+        })
+        .catch(function (error)
+        {
+            console.error("[evaluationRouter.uploadUrl] create upload URL failed", error);
+            response.failure(res, error);
+        });
+});
+
+router.post("/upload-complete", function (req, res)
+{
+    const body = req.body || {};
+
+    if (typeof body.object_key !== "string" || !body.object_key.trim() || typeof body.mime_type !== "string")
+    {
+        response.failure(res, {
+            message: "object_key and mime_type are required.",
+            isClientError: true
+        });
+    }
+    else
+    {
+        uploadManager.verifyUpload(body.object_key, body.file_size)
+            .then(function (storedSize)
+            {
+                const input = {
+                    objectKey: body.object_key,
+                    inputType: body.mime_type.startsWith("audio/") ? "audio" : "video",
+                    inputData: {
+                        title: body.title || body.file_name || "Class recording",
+                        teacher: body.teacher || "",
+                        subject: body.subject || "",
+                        notes: body.notes || "",
+                        fileName: body.file_name || "",
+                        mimeType: body.mime_type,
+                        fileSize: storedSize
+                    }
+                };
+
+                evaluationManager.submit(req.app.locals.boss, input)
+                    .then(function (data)
+                    {
+                        response.created(res, {
+                            evaluation_id: data.evaluation.evaluation_id,
+                            process_id: data.process.process_id,
+                            status: "queued"
+                        }, "Recording queued.");
+                    })
+                    .catch(function (error)
+                    {
+                        console.error("[evaluationRouter.uploadComplete] queue recording failed", error);
+                        response.failure(res, error);
+                    });
+            })
+            .catch(function (error)
+            {
+                console.error("[evaluationRouter.uploadComplete] verify upload failed", error);
+                response.failure(res, error);
+            });
+    }
+});
+
 router.post("/upload", ingest.single("file"), function (req, res)
 {
     if (!req.file)
